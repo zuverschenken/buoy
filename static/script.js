@@ -8,18 +8,22 @@ document.addEventListener('DOMContentLoaded', function () {
             var lat = e.latlng.lat;
             var lon = e.latlng.lng;
             fetch(`/query_coords?lat=${lat}&lon=${lon}`)
-                .then(response => response.json())
-                .then(data => {
-                    let text;
-                    if (data.success) {
-                      text = `Maximum wave height (meters): ${data.wave_height}<br>Observation's distance from click (kilometers): ${data.distance}`;
-                    } else {
-                      text = data.message;
-                    }
-                    L.popup()
-                        .setLatLng([data.lat, data.lon])
-                        .setContent(text)
+                .then(response => {
+                    if (! response.ok){
+                      L.popup()
+                        .setLatLng([lat, lon])
+                        .setContent('Backend search failed!')
                         .openOn(map);
+                      throw new Error('Backend search failed!');
+                    }
+                    return response.json();
+                  })
+                .then(data => {
+                    let text = `Maximum wave height (meters): ${data.wave_height}<br>Observation's distance from click (kilometers): ${data.distance}`;
+                    L.popup()
+                      .setLatLng([data.lat, data.lon])
+                      .setContent(text)
+                      .openOn(map);
                 });
         });
     } else {
